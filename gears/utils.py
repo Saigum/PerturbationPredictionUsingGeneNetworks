@@ -215,6 +215,7 @@ def make_GO(data_path, pert_list, data_name, num_workers=25, save=True):
 
     with open(os.path.join(data_path, 'gene2go_all.pkl'), 'rb') as f:
         gene2go = pickle.load(f)
+    #perturbation_list
     gene2go = {i: gene2go[i] for i in pert_list}
 
     print('Creating custom GO graph, this can take a few minutes')
@@ -230,7 +231,9 @@ def make_GO(data_path, pert_list, data_name, num_workers=25, save=True):
         columns={0: 'source', 1: 'target', 2: 'importance'})
     
     if save:
-        print('Saving edge_list to file')
+        if(data_path is not None):
+            fname = os.path.join(data_path,f"go_essential{data_name}.csv")
+        print(f'Saving edge_list to file {fname}')
         df_edge_list.to_csv(fname, index=False)
 
     return df_edge_list
@@ -409,6 +412,7 @@ def loss_fct(pred, y, perts, ctrl = None, direction_lambda = 1e-3, dict_filter =
         # during training, we remove the all zero genes into calculation of loss.
         # this gives a cleaner direction loss. empirically, the performance stays the same.
         if p!= 'ctrl':
+            # print(dict_filter)
             retain_idx = dict_filter[p]
             pred_p = pred[pert_idx][:, retain_idx]
             y_p = y[pert_idx][:, retain_idx]

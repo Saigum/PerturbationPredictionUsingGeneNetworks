@@ -7,7 +7,7 @@ import torch.optim as optim
 import torch.nn as nn
 from torch.optim.lr_scheduler import StepLR
 
-from .model import GEARS_Model
+from .model import GEARS_Model,GEARS_EMBED
 from .inference import evaluate, compute_metrics, deeper_analysis, \
                   non_dropout_analysis
 from .utils import loss_fct, uncertainty_loss_fct, parse_any_pert, \
@@ -64,7 +64,7 @@ class GEARS:
         self.device = device
         self.config = None
         
-        self.dataloader = pert_data.dataloader
+        self.dataloader = pert_data.dataloader ## 
         self.adata = pert_data.adata
         self.node_map = pert_data.node_map
         self.node_map_pert = pert_data.node_map_pert
@@ -84,7 +84,7 @@ class GEARS:
         self.saved_logvar_sum = {}
         
         self.ctrl_expression = torch.tensor(
-            np.mean(self.adata.X[self.adata.obs.condition == 'ctrl'],
+            np.mean(self.adata.X[self.adata.obs.condition.values == 'ctrl'],
                     axis=0)).reshape(-1, ).to(self.device)
         pert_full_id2pert = dict(self.adata.obs[['condition_name', 'condition']].values)
         self.dict_filter = {pert_full_id2pert[i]: j for i, j in
@@ -95,6 +95,7 @@ class GEARS:
         gene_dict = {g:i for i,g in enumerate(self.gene_list)}
         self.pert2gene = {p: gene_dict[pert] for p, pert in
                           enumerate(self.pert_list) if pert in self.gene_list}
+
 
     def tunable_parameters(self):
         """
@@ -134,6 +135,7 @@ class GEARS:
                          G_coexpress = None,
                          G_coexpress_weight = None,
                          no_perturb = False,
+                         gears_model=True,
                          **kwargs
                         ):
         """
@@ -194,7 +196,8 @@ class GEARS:
                        'device': self.device,
                        'num_genes': self.num_genes,
                        'num_perts': self.num_perts,
-                       'no_perturb': no_perturb
+                       'no_perturb': no_perturb,
+                       'gears_model': gears_model,
                       }
         
         if self.wandb:
@@ -234,7 +237,10 @@ class GEARS:
             self.config['G_go'] = sim_network.edge_index
             self.config['G_go_weight'] = sim_network.edge_weight
             
-        self.model = GEARS_Model(self.config).to(self.device)
+        if(self.config["gears_model"] is True ):
+            self.model = GEARS_Model(self.config).to(self.device)
+        else:
+            self.model = GEARS_EMBED(self.config).to(self.device)
         self.best_model = deepcopy(self.model)
         
     def load_pretrained(self, path):
@@ -545,6 +551,7 @@ class GEARS:
                                  self.config['uncertainty'], self.device)
             val_res = evaluate(val_loader, self.model,
                                  self.config['uncertainty'], self.device)
+            
             train_metrics, _ = compute_metrics(train_res)
             val_metrics, _ = compute_metrics(val_res)
 

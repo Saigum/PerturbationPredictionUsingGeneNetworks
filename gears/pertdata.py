@@ -558,8 +558,12 @@ class PertData:
             de_genes = adata_.uns['rank_genes_groups_cov_all']
             de = True
         else:
-            de = False
-            num_de_genes = 1
+            ## computing the differentially expressed genes.
+            sc.tl.rank_genes_groups(adata_,groupby="condition_name")
+            de_genes = adata_.uns['rank_genes_groups']["names"]
+            de = True
+            # de = False
+            # num_de_genes = 1
         Xs = []
         ys = []
 

@@ -70,7 +70,7 @@ def compute_metrics(results):
 
     metric2fct = {
            'mse': mse,
-           'pearson': pearsonr
+           'pearson': pearsonr,
     }
     
     for m in metric2fct.keys():
@@ -84,7 +84,17 @@ def compute_metrics(results):
             
         for m, fct in metric2fct.items():
             if m == 'pearson':
-                val = fct(results['pred'][p_idx].mean(0), results['truth'][p_idx].mean(0))[0]
+                #results 
+                #results['pred'] is every single possible perturbation's prediction.    
+                pred_subset_expr = results['pred_de'][p_idx]
+                truth_subset_expr = results['truth_de'][p_idx]
+                try:
+                    val = fct(results['pred_de'][p_idx].mean(0), results['truth_de'][p_idx].mean(0))[0]
+                except:
+                    # print(f" pred{results['pred_de'][p_idx].shape}", f" truth :{results['truth_de'][p_idx].shape}")
+                    val = fct(results['pred_de'][p_idx], results['truth_de'][p_idx])[0]
+                
+                
                 if np.isnan(val):
                     val = 0
             else:
@@ -98,7 +108,12 @@ def compute_metrics(results):
             
             for m, fct in metric2fct.items():
                 if m == 'pearson':
-                    val = fct(results['pred_de'][p_idx].mean(0), results['truth_de'][p_idx].mean(0))[0]
+                    try:
+                        val = fct(results['pred_de'][p_idx].mean(0), results['truth_de'][p_idx].mean(0))[0]
+                    except:
+                        # print(f" pred{results['pred_de'][p_idx].shape}", f" truth :{results['truth_de'][p_idx].shape}")
+                        val = fct(results['pred_de'][p_idx], results['truth_de'][p_idx])[0]
+                    # val = fct(results['pred_de'][p_idx].mean(0), results['truth_de'][p_idx].mean(0))[0]
                     if np.isnan(val):
                         val = 0
                 else:
