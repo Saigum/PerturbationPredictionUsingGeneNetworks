@@ -273,7 +273,8 @@ class PertData:
                       test_perts = None,
                       only_test_set_perts = False,
                       test_pert_genes = None,
-                      split_dict_path=None):
+                      split_dict_path=None,
+                      val_size=0.1):
 
         """
         Prepare splits for training and testing
@@ -379,7 +380,7 @@ class PertData:
             elif split == 'single':
                 # single perturbation
                 DS = DataSplitter(self.adata, split_type=split)
-                adata = DS.split_data(test_size=combo_single_split_test_set_fraction,
+                adata = DS.split_data(test_size=combo_single_split_test_set_fraction,val_size=val_size,
                                       seed=seed)
 
             elif split == 'no_test':
